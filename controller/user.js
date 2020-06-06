@@ -18,7 +18,7 @@ exports.findAll = (req, res) => {
 exports.create = async (req, res) => {
   // Validate request
   if (!req.body) {
-    res.status(400).send(JSON.stringify({"status": 400, "error": "Content can not be empty!", "response": null }));      
+    res.status(400).send(JSON.stringify({"status": 400, "error": [ {msg : "Content can not be empty!"}] , "response": null }));      
   }
 
   // Create a User
@@ -40,7 +40,7 @@ exports.create = async (req, res) => {
                   .catch(error => {
                           res.status(500).send(JSON.stringify({
                             "status": 500, 
-                            "error": error.message || "Some error occurred while creating users.", 
+                            "error": [ {msg : error.message || "Some error occurred while creating users."}], 
                             "response": null 
                           }));
                     })
@@ -51,7 +51,7 @@ exports.create = async (req, res) => {
 exports.login = async (req, res) => {
   // Validate request
   if (!req.body) {
-    res.status(400).send(JSON.stringify({"status": 400, "error": "Content can not be empty!", "response": null }));      
+    res.status(400).send(JSON.stringify({"status": 400, "error":  [{msg : "Content can not be empty!"}], "response": null }));      
   }
 
   // Create a User
@@ -83,7 +83,7 @@ exports.login = async (req, res) => {
                   if (bcryptErr){
                       res.status(500).send(JSON.stringify({
                         "status": 500, 
-                        "error": bcryptErr.message || "Some error occurred while compare password.", 
+                        "error": [{msg : bcryptErr.message || "Some error occurred while compare password."}], 
                         "response": null 
                       }));
                   }
@@ -95,7 +95,7 @@ exports.login = async (req, res) => {
                     // response is OutgoingMessage object that server response http request
                     return res.status(422).send(JSON.stringify({
                       "status": 422, 
-                      "error": "Passwords do not match", 
+                      "error": [{msg : "Passwords do not match"}], 
                       "response": null 
                     }));
                   }
@@ -104,7 +104,7 @@ exports.login = async (req, res) => {
                 // handle error;
                 res.status(500).send(JSON.stringify({
                   "status": 500, 
-                  "error": error.message || "Some error occurred while login.", 
+                  "error": [{msg : error.message || "Some error occurred while login."}], 
                   "response": null 
                 }));
             });
@@ -115,10 +115,7 @@ handleError = (status, msg, res = null) => {
   return JSON.stringify({
     "status": status, 
     "error": [{
-            value : "",
-            msg : msg,
-            param : "username",
-            location : "body"
+            msg : msg
       }], 
     "response": res 
   })

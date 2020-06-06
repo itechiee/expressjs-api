@@ -53,9 +53,24 @@ exports.register = [
         .bail(),
 
     (req, res, next) => {
-        const errors = validationResult(req);
+        // const errors = validationResult(req);
+        // const myValidationResult = validationResult.withDefaults({
+        //     formatter: (error) => {
+        //       return {
+        //         msg: error.msg,
+        //       };
+        //     }
+        //   });
+        //   const errors = myValidationResult(req).array();
+        //   console.log(errors);
+          const errorFormatter = ({ location, msg, param, value, nestedErrors }) => {
+            // Build your resulting errors however you want! String, object, whatever - it works!
+            return {msg:msg};
+          };
+          const errors = validationResult(req).formatWith(errorFormatter);
+console.log(errors);
         if (!errors.isEmpty())
-        return res.status(422).json({status: 422, error: errors['errors'], response: null });      
+            return res.status(422).json({status: 422, error: errors.array(), response: null });      
         next();
     },
 ];
