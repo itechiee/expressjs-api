@@ -75,7 +75,7 @@ exports.login = async (req, res) => {
                 }
                 let userData = userResult.dataValues;
                 if(userData.active === false) {
-                  return res.status(422).send(handleError(422, "User is not active"));
+                  return res.status(422).send(handleError(422, "Please contact blastsmshelp@gmail.com to activate the account"));
               }
               
                 let hashPassword = userData.password;
