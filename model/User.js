@@ -79,6 +79,9 @@ const User = sequelize.define('user', {
       type: Sequelize.STRING
       // allowNull defaults to true
     },
+    multiple_user: {
+      type: Sequelize.BOOLEAN
+    },
     created_at: {
       type: Sequelize.DATE
       // allowNull defaults to true
