@@ -64,17 +64,7 @@ exports.login = async (req, res) => {
                 if(userData.active === false) {
                   return res.status(422).send(handleError(422, "Please contact blastsmshelp@gmail.com to activate the account"));
                 }
-                if(userData.multiple_user == false) {
-                  if(userData.device_id === '' || userData.device_id === null ) {
-                      userModel.update({ device_id: user.device_id }, 
-                                    { where: { username: user.username } 
-                                    });
-                  } else {
-                    if(user.device_id !== userData.device_id) {
-                      return res.status(422).send(handleError(422, "Login is tied with other device email blastsmshelp@gmail.com for support"));
-                    } 
-                  }
-                } 
+                 
               
                 let hashPassword = userData.password;
                 bcrypt.compare(user.password, hashPassword, function(bcryptErr, bcryptRes) {
@@ -86,6 +76,20 @@ exports.login = async (req, res) => {
                       }));
                   }
                   if (bcryptRes) {
+
+                    // Multiple users login login
+                    if(userData.multiple_user == false) {
+                      if(userData.device_id === '' || userData.device_id === null ) {
+                          userModel.update({ device_id: user.device_id }, 
+                                        { where: { username: user.username } 
+                                        });
+                      } else {
+                        if(user.device_id !== userData.device_id) {
+                          return res.status(422).send(handleError(422, "Login is tied with other device email blastsmshelp@gmail.com for support"));
+                        } 
+                      }
+                    }
+                    
                     // Send user data
                     delete userData.password;
                     res.send(JSON.stringify({"status": 200, "error": null, "response": userData }));
