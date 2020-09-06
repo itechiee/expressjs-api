@@ -1,5 +1,12 @@
-const userModel = require('../model/User');
+var moment = require("moment");
 let bcrypt = require('bcrypt');
+// const nodemailer = require("nodemailer");
+// const SendmailTransport = require("nodemailer/lib/sendmail-transport");
+// var handlebars = require('handlebars');
+const forgetPasswordModel = require('../model/ForgetPassword');
+const userModel = require('../model/User');
+const mailer = require('../helpers/mailer');
+
 
 // User Register
 exports.create = async (req, res) => {
@@ -112,6 +119,97 @@ exports.login = async (req, res) => {
             });
 };
 
+
+// User Forget Password
+exports.forgetPassword = async (req, res) => {
+  // Validate request
+  if (!req.body) {
+    res.status(400).send(JSON.stringify({"status": 400, "error": [ {msg : "Content can not be empty!"}] , "response": null }));      
+  }
+
+  let userEmail = req.body.email;
+
+  await userModel.findOne({
+        where: {
+            email: userEmail
+        }
+      }).then(userResult => {
+        if(userResult === null) {
+          return res.status(422).send(
+            handleError(422, "Email not exists")
+          );
+        }
+        let userData = userResult.dataValues;
+        
+        let currentDate = moment().format('YYYY-MM-DD HH:mm:ss'),
+        expiryDate = moment(currentDate).add(5, 'hours').format('YYYY-MM-DD hh:mm:ss'),
+        PinNumber = Math.floor(1000 + Math.random() * 9000);
+
+        let forgetPasswordData = {
+          user_id: userData.id,
+          pin: PinNumber,
+          expire_at: expiryDate,
+          created_at: currentDate          
+        };
+
+        let mailData = {
+          pin: forgetPasswordData.pin,
+          email: userData.email,
+          username: userData.username
+        };
+        forgetPasswordModel.findOne({
+          where: {
+              user_id: userData.id
+          }
+        }).then(forgetPwdResult => {
+          if(forgetPwdResult === null) {
+            forgetPasswordModel.create(forgetPasswordData)
+                .then(data => {
+                    // send mail
+                    mailer.sendForgetPasswordMail(mailData, res);
+                })
+                .catch(error => {
+                        res.status(500).send(JSON.stringify({
+                          "status": 500, 
+                          "error": [ {msg : error.message || "Some error occurred while generating forget password pin"}], 
+                          "response": null 
+                        }));
+                  })
+          } else {
+            let forgetPwdData = forgetPwdResult.dataValues;
+            forgetPasswordModel.update(
+              { 
+                pin: forgetPasswordData.pin,
+                expire_at: forgetPasswordData.expire_at,
+                created_at: forgetPasswordData.created_at
+              }, 
+              { 
+                where: { user_id: forgetPwdData.user_id } 
+              }).then(data => {
+                  // send mail
+                  mailer.sendForgetPasswordMail(mailData, res);
+              })
+              .catch(error => {
+                res.status(500).send(JSON.stringify({
+                  "status": 500, 
+                  "error": [ {msg : error.message || "Some error occurred while generating forget password pin"}], 
+                  "response": null 
+                }));
+              });
+          }
+          
+        })
+        
+
+    }).catch(function (error) {
+        // handle error;
+        res.status(500).send(JSON.stringify({
+          "status": 500, 
+          "error": [{msg : error.message || "Some error occurred while forget password."}], 
+          "response": null 
+        }));
+    });
+};
 
 handleError = (status, msg, res = null) => {
   return JSON.stringify({

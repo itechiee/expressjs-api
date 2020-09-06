@@ -135,3 +135,18 @@ exports.login = [
         next();
     },
 ];
+
+exports.forgetpassword = [
+    check('email')
+        .trim()
+        .not()
+        .isEmpty().withMessage('Invalid email address!')
+        .bail(),
+
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+        return res.status(422).json({status: 422, error: errors['errors'], response: null });      
+        next();
+    },
+];
