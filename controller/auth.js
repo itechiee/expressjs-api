@@ -1,12 +1,8 @@
 var moment = require("moment");
 let bcrypt = require('bcrypt');
-// const nodemailer = require("nodemailer");
-// const SendmailTransport = require("nodemailer/lib/sendmail-transport");
-// var handlebars = require('handlebars');
 const forgetPasswordModel = require('../model/ForgetPassword');
 const userModel = require('../model/User');
 const mailer = require('../helpers/mailer');
-
 
 // User Register
 exports.create = async (req, res) => {
@@ -199,8 +195,6 @@ exports.forgetPassword = async (req, res) => {
           }
           
         })
-        
-
     }).catch(function (error) {
         // handle error;
         res.status(500).send(JSON.stringify({
@@ -210,6 +204,74 @@ exports.forgetPassword = async (req, res) => {
         }));
     });
 };
+
+// Update new passwird
+exports.newpassword = async (req, res) => {
+  // Validate request
+  if (!req.body) {
+    res.status(400).send(JSON.stringify({"status": 400, "error": [ {msg : "Content can not be empty!"}] , "response": null }));      
+  }
+
+  let inputData = {
+    email: req.body.email,
+    pin: req.body.pin
+  };
+  // Generate new password
+  let saltRounds = process.env.SALT_ROUNDS,
+  password = await bcrypt.hashSync(req.body.password, parseInt(saltRounds));
+  await userModel.findOne({ // check users email exists 
+        where: {
+            email: inputData.email
+        }
+      }).then(userResult => {
+        if(userResult === null) {
+          return res.status(422).send(
+            handleError(422, "Email not exists")
+          );
+        }
+        let userData = userResult.dataValues;        
+        forgetPasswordModel.findOne({ // Check forget password data exists
+          where: {
+              user_id: userData.id,
+              pin: inputData.pin
+          }
+        }).then(forgetPwdResult => { 
+            if(forgetPwdResult === null) {
+                return res.status(422).send(
+                  handleError(422, "PIN not found")
+                );
+            }
+            // Compare expiry dates for PIN
+            let forgetPwdData = forgetPwdResult.dataValues,
+            currentDate = moment(moment().format('YYYY-MM-DD HH:mm:ss')),
+            expiryDate = moment(moment(forgetPwdData.expire_at).utc().format('YYYY-MM-DD HH:mm:ss')),
+            isPinExpired = expiryDate.diff(currentDate, 'seconds');
+
+            if(isPinExpired < 0) {
+                return res.status(422).send(
+                  handleError(422, "PIN number expired")
+                );
+            }
+            // Update new password
+            userModel.update(
+                { password: password }, 
+                { where: { id: userData.id } }
+              )
+              .then(updateResult => {
+                if(updateResult) {
+                  return res.send(JSON.stringify({"status": 200, "error": null, "response": 'Password updated successfully' }));
+                }                        
+              });
+        })
+    }).catch(function (error) {
+        // handle error;
+        res.status(500).send(JSON.stringify({
+          "status": 500, 
+          "error": [{msg : error.message || "Some error occurred while forget password."}], 
+          "response": null 
+        }));
+    });
+}
 
 handleError = (status, msg, res = null) => {
   return JSON.stringify({

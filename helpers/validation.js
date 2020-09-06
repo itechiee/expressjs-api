@@ -150,3 +150,33 @@ exports.forgetpassword = [
         next();
     },
 ];
+
+exports.newpassword = [
+    check('email')
+        .trim()
+        .not()
+        .isEmpty().withMessage('Invalid email address!')
+        .bail(),
+
+        
+    check('password')
+        .trim()
+        .not()
+        .isEmpty().withMessage('Password field is required!')
+        .isLength({min: 3}).withMessage('Minimum 3 characters required!')
+        .bail(),
+
+    check('pin')
+        .trim()
+        .not()
+        .isEmpty().withMessage('Pin number field is required!')
+        .isLength({min: 2, max: 4}).withMessage('Pin number should be 4 digits')
+        .bail(),
+
+    (req, res, next) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty())
+        return res.status(422).json({status: 422, error: errors['errors'], response: null });      
+        next();
+    },
+];
