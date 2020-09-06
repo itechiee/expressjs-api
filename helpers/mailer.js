@@ -21,7 +21,8 @@ module.exports = {
             smtpTransport.sendMail(mailOptions, function (error, response) {
                 if (error) {
                     console.log(error);
-                    callback(error);
+                    throw error;
+                    // callback(error);
                 }
                 smtpTransport.close();
                 return res.send(JSON.stringify({"status": 200, "error": null, "response": 'OTP sent successfully' }));
