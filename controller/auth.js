@@ -3,6 +3,7 @@ let bcrypt = require('bcrypt');
 const forgetPasswordModel = require('../model/ForgetPassword');
 const userModel = require('../model/User');
 const mailer = require('../helpers/mailer');
+require('dotenv').config();
 
 // User Register
 exports.create = async (req, res) => {
@@ -138,7 +139,7 @@ exports.forgetPassword = async (req, res) => {
         let userData = userResult.dataValues;
         
         let currentDate = moment().format('YYYY-MM-DD HH:mm:ss'),
-        expiryDate = moment(currentDate).add(5, 'hours').format('YYYY-MM-DD hh:mm:ss'),
+        expiryDate = moment(currentDate).add(process.env.FORGET_PASSWORD_EXPIRY_DELAY_HOURS, 'hours').format('YYYY-MM-DD hh:mm:ss'),
         PinNumber = Math.floor(1000 + Math.random() * 9000);
 
         let forgetPasswordData = {
