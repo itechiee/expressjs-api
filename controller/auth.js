@@ -139,7 +139,7 @@ exports.forgetPassword = async (req, res) => {
         let userData = userResult.dataValues;
         
         let currentDate = moment().format('YYYY-MM-DD HH:mm:ss'),
-        expiryDate = moment(currentDate).add(process.env.FORGET_PASSWORD_EXPIRY_DELAY_HOURS, 'hours').format('YYYY-MM-DD hh:mm:ss'),
+        expiryDate = moment(currentDate).add(process.env.FORGET_PASSWORD_EXPIRY_DELAY_HOURS, 'hours').format('YYYY-MM-DD HH:mm:ss'),
         PinNumber = Math.floor(1000 + Math.random() * 9000);
 
         let forgetPasswordData = {
